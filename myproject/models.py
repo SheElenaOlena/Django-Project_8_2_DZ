@@ -13,7 +13,7 @@ class Task(models.Model):
     title = models.CharField(max_length=100, verbose_name='Название задачи', unique=True,
                              unique_for_date='publish_date', null=False, blank=False)
     description = models.TextField(verbose_name='Описание задачи', null=False, blank=False)
-    categories = models.ManyToManyField('Category', verbose_name='Категории')
+    categories = models.ManyToManyField('Category', verbose_name='Категории', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     deadline = models.DateTimeField(verbose_name='Дедлайн', null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')

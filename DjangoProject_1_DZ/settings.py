@@ -15,6 +15,7 @@ import os
 import environ
 
 env = environ.Env()
+BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env()
 
 USE_MYSQL = env.bool("MYSQL", default=False)
@@ -40,7 +41,7 @@ else:
     }
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = Path(__file__).resolve().parent.parent
 # ● Path(__file__) возвращает объект Path для текущего файла settings.py.
 # ● .resolve() преобразует его в абсолютный путь.
 # ● .parent.parent поднимается на два уровня вверх по файловой системе: сначала
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myproject',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
