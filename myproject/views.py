@@ -1,4 +1,6 @@
+from django.core.serializers import serialize
 from django.db.models.aggregates import Count
+from django.db.models.expressions import result
 from django.http import HttpResponse
 from rest_framework.generics import get_object_or_404
 from rest_framework.generics import RetrieveAPIView
@@ -7,8 +9,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Task, SubTask
-from .serializer import TaskCreateSerializer, TaskDetailSerializer, SubTaskCreateSerializer
+from .serializer import SubTaskDetailSerializer, TaskSerializer, TaskCreateSerializer, TaskDetailSerializer, SubTaskCreateSerializer
 from django.utils import timezone
+from django.db.models.functions import ExtractWeekDay
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
+
+
 
 
 # Create your views here.
@@ -107,3 +114,75 @@ class SubTaskDetailUpdateDeleteView(APIView):
         subtask = get_object_or_404(SubTask, pk=pk)
         subtask.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+class TaskView(APIView):
+    def get(self, request):
+        day_param = request.query_params.get('day', None)
+
+        # Словарь: день недели → номер для ExtractWeekDay
+        day_map = {
+            'понедельник': 2,
+            'вторник': 3,
+            'среда': 4,
+            'четверг': 5,
+            'пятница': 6,
+            'суббота': 7,
+            'воскресенье': 1
+        }
+
+        tasks = Task.objects.all().annotate(
+            week_day=ExtractWeekDay('created_at')  # или 'publish_date'
+        )
+
+        if day_param:
+            day_param_lower = day_param.lower()
+            day_number = day_map.get(day_param_lower)
+            if day_number:
+                tasks = tasks.filter(week_day=day_number)
+
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+
+class SubTaskPagination(PageNumberPagination):
+    """Пагинация данных """
+    page_size = 5
+    page_size_query_param = 'page_size'  # Позволяет задавать page_size через URL
+
+class SubTaskListApiView(ListAPIView):
+    """Пагинация подзадач с сортировкой по убыванию даты"""
+    serializer_class = SubTaskDetailSerializer
+    pagination_class = SubTaskPagination
+
+    def get_queryset(self):
+        parent_id = self.request.query_params.get('parent_task_id')
+        queryset = SubTask.objects.all().order_by('-deadline')
+        if parent_id:
+            queryset = queryset.filter(parent_task_id=parent_id)
+        return queryset
+
+    """Получение списка всех подзадач по названию главной задачи
+       и статусу подзадач с использованием фильтров"""
+class FilteredSubTaskListApiView(ListAPIView):
+    serializer_class = SubTaskDetailSerializer
+    pagination_class = SubTaskPagination
+
+    def get_queryset(self):
+        """query-параметры запроса.
+        Если они передаются — фильтрация применяется.
+        Если не передаются — выводятся все записи."""
+
+        main_task_title = self.request.query_params.get('main_task_title')
+        status_param = self.request.query_params.get('status')
+
+        queryset = SubTask.objects.all().order_by('-created_at')
+
+        if main_task_title:
+            queryset = queryset.filter(task__title__iexact=main_task_title)
+
+        if status_param:
+            queryset = queryset.filter(status__iexact=status_param)
+
+        return queryset

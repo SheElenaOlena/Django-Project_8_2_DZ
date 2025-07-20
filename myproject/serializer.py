@@ -1,4 +1,9 @@
+from django.template.context_processors import request
 from rest_framework import serializers
+from rest_framework.views import APIView
+
+
+
 from .models import Task, SubTask, Category
 from django.utils import timezone
 
@@ -63,3 +68,15 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['id', 'title', 'subtasks', 'status', 'deadline', 'publish_date', 'categories']
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+
+class SubTaskDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubTask
+        fields = '__all__'
