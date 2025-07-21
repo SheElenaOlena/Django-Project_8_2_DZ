@@ -8,12 +8,17 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Task, SubTask
-from .serializer import SubTaskDetailSerializer, TaskSerializer, TaskCreateSerializer, TaskDetailSerializer, SubTaskCreateSerializer
+from .models import Task, SubTask, Category
+from .serializer import (CategorySerializer, SubTaskDetailSerializer, TaskSerializer,
+                         TaskCreateSerializer, TaskDetailSerializer,
+                         SubTaskCreateSerializer, CategoryCreateSerializer)
 from django.utils import timezone
 from django.db.models.functions import ExtractWeekDay
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 
@@ -78,21 +83,35 @@ class TaskDetailAPIView(RetrieveAPIView):
     serializer_class = TaskDetailSerializer
 
 
-class SubTaskListCreateView(APIView):
-    """Представление для списка и создания подзадач"""
-    def get(self, request):
-        subtasks = SubTask.objects.all()
-        serializer = SubTaskCreateSerializer(subtasks, many=True)
-        return Response(serializer.data)
 
-    def post(self, request):
-        serializer = SubTaskCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class TaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskDetailSerializer
 
 
+
+# class SubTaskListCreateView(APIView):
+#     """Представление для списка и создания подзадач"""
+#     def get(self, request):
+#         subtasks = SubTask.objects.all()
+#         serializer = SubTaskCreateSerializer(subtasks, many=True)
+#         return Response(serializer.data)
+#
+#     def post(self, request):
+#         serializer = SubTaskCreateSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+class SubTaskListCreateAPIView(ListCreateAPIView):
+    queryset = SubTask.objects.all()
+    serializer_class = SubTaskCreateSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'deadline']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
 
 
 class SubTaskDetailUpdateDeleteView(APIView):
@@ -186,3 +205,38 @@ class FilteredSubTaskListApiView(ListAPIView):
             queryset = queryset.filter(status__iexact=status_param)
 
         return queryset
+
+
+class TaskListCreateAPIView(ListCreateAPIView):
+    serializer_class = TaskCreateSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        queryset = Task.objects.all()
+
+        # Фильтрация по статусу
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            status_cleaned = status_param.strip().lower()
+            queryset = queryset.filter(status__iexact=status_cleaned)
+
+        # Фильтрация по дедлайну
+        deadline_param = self.request.query_params.get('deadline')
+        if deadline_param:
+            queryset = queryset.filter(deadline=deadline_param)
+
+        return queryset
+
+
+
+class CategoryListCreateAPIView(ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategoryCreateSerializer
+
+
+class CategoryRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer

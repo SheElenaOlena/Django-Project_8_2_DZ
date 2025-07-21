@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from myproject.views import TaskView, TaskDetailAPIView, SubTaskListCreateView, SubTaskDetailUpdateDeleteView
+from myproject.views import TaskView, TaskDetailAPIView,  SubTaskListCreateAPIView, SubTaskDetailUpdateDeleteView
 from myproject import views
 
 
@@ -27,13 +27,14 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('', include('myproject.urls')),
 
-    path('tasks/', include('myproject.urls')),
-    path('tasks/<int:pk>/', TaskDetailAPIView.as_view(), name='task-detail'),
-    path('subtasks/', SubTaskListCreateView.as_view(), name='subtask-list-create'),
-    path('subtasks/<int:pk>/', SubTaskDetailUpdateDeleteView.as_view(), name='subtask-detail-update-delete'),
+     path('tasks/', include('myproject.urls')),
+    # path('tasks/<int:pk>/', TaskDetailAPIView.as_view(), name='task-detail'),
+    # path('subtasks/', SubTaskListCreateView.as_view(), name='subtask-list-create'),
+    # path('subtasks/<int:pk>/', SubTaskDetailUpdateDeleteView.as_view(), name='subtask-detail-update-delete'),
+    # path('subtasks/', SubTaskListCreateAPIView.as_view(), name='subtask-list-create'),
 
     # path('tasks/', TaskView.as_view(), name='task-list'),
-    path('api/v1/tasks/', include('myproject.urls')),
+    # path('api/v1/tasks/', include('myproject.urls')),
 
 
       ]

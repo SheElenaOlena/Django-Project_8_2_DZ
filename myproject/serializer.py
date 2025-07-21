@@ -80,3 +80,9 @@ class SubTaskDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
         fields = '__all__'
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
