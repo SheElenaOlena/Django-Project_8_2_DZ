@@ -1,10 +1,11 @@
 from django.urls import path, include
-from myproject.views import (CategoryRetrieveUpdateDestroyAPIView, CategoryListCreateAPIView,
-                             SubTaskDetailUpdateDeleteView,SubTaskListCreateAPIView,
+from rest_framework.routers import DefaultRouter
+from myproject.views import (CategoryViewSet, CategoryRetrieveUpdateDestroyAPIView, CategoryListCreateAPIView,
+                             SubTaskDetailUpdateDeleteView, SubTaskListCreateAPIView,
                              TaskRetrieveUpdateDestroyAPIView, TaskListCreateAPIView,
-                             FilteredSubTaskListApiView,SubTaskListApiView,
+                             FilteredSubTaskListApiView, SubTaskListApiView,
                              TaskView, home_view, hello_view, task_create,
-                             task_list, task_detail, task_count, task_stats)
+                             task_list, task_detail, task_count, task_stats, CategoryViewSet)
 
 # urlpatterns = [
 #     # path('', home_view, name='home'),  # Главная страница
@@ -27,7 +28,13 @@ from myproject.views import (CategoryRetrieveUpdateDestroyAPIView, CategoryListC
 #
 #
 # ]
+router = DefaultRouter()
+router.register('categories', CategoryViewSet, basename='category')
+
+
 urlpatterns = [
+    path('', include(router.urls)),
+
     # Список задач и создание
     path('', TaskListCreateAPIView.as_view(), name='task-list-create'),
 

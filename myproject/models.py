@@ -1,3 +1,6 @@
+from django.utils import timezone
+
+from .managers import SoftDeleteManager
 from django.db import models
 
 # Create your models here.
@@ -56,10 +59,19 @@ class SubTask(models.Model):
         ordering = ['-created_at']  # Сортировка по убыванию даты создания
         verbose_name = 'SubTask'  # Человекочитаемое имя модели
 
-from django.db import models
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name='Название категории')
+    is_deleted = models.BooleanField(default=False)    # Поле для мягкого удаления
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата удаления')
+
+    objects = SoftDeleteManager()   # Менеджер для исключения удаленных записей
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
 
     def __str__(self):
         return self.name

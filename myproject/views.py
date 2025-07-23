@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 from .models import Task, SubTask, Category
 from .serializer import (CategorySerializer, SubTaskDetailSerializer, TaskSerializer,
                          TaskCreateSerializer, TaskDetailSerializer,
@@ -240,3 +242,24 @@ class CategoryListCreateAPIView(ListCreateAPIView):
 class CategoryRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    """Создайние CategoryViewSet, используя ModelViewSet для CRUD операций."""
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    """кастомный метод count_tasks
+         используя декоратор @action для подсчета количества задач,
+          связанных с каждой категорией."""
+    @action(detail=False, methods=['get'])
+    def count_tasks(self, request):
+        category_with_task_count = Category.objects.annotate(
+               task_count=Count('task'))
+        data = [
+            {
+
+                "category": category.name,
+                "task_count": category.task_count
+            }
+            for category in category_with_task_count
+        ]
+        return Response(data)
